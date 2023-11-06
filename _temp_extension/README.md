@@ -1,11 +1,11 @@
 # lc_multi_outputs
 
-[![Github Actions Status](https://github.com/entap/lc_multi_outputs/workflows/Build/badge.svg)](https://github.com/entap/lc_multi_outputs/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/entap/lc_multi_outputs/main?urlpath=lab)
+[![Github Actions Status](https://github.com/entap/lc_multi_outputs.git/workflows/Build/badge.svg)](https://github.com/entap/lc_multi_outputs.git/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/entap/lc_multi_outputs.git/main?urlpath=lab)
 Multiple outputs as tabs
 
 ## Requirements
 
-- JupyterLab >= 3.0
+- JupyterLab >= 4.0.0
 
 ## Install
 
@@ -37,7 +37,7 @@ The `jlpm` command is JupyterLab's pinned version of
 # Clone the repo to your local environment
 # Change directory to the lc_multi_outputs directory
 # Install package in development mode
-pip install -e .
+pip install -e "."
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
 # Rebuild extension Typescript source after making changes

@@ -47,7 +47,7 @@ test('should save current outputs on clicking the pin button', async ({ page }) 
   await page.notebook.run();
   // click add pin button on toolbar
   await page.notebook.selectCells(0, 0);
-  await page.locator('#output-current').locator(".multi-outputs-ui").locator("button").click();
+  await page.locator('[title="Pin Outputs"]').click();
   // has tabs
   await expect(multi_outputs_tabs_container.locator('li[id="tab-output-2"]')).toBeVisible();
   // click output-1 tab

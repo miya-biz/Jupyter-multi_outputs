@@ -47,7 +47,7 @@ test('should save current outputs on clicking the pin button', async ({ page }) 
   await page.notebook.run();
   // click add pin button on toolbar
   await page.notebook.selectCells(0, 0);
-  await page.locator('button[title="Pin Outputs"]').click();
+  await page.locator('#output-current').locator(".multi-outputs-ui").locator("button").click();
   // has tabs
   await expect(multi_outputs_tabs_container.locator('li[id="tab-output-2"]')).toBeVisible();
   // click output-1 tab
@@ -61,7 +61,7 @@ test('should save current outputs on clicking the pin button', async ({ page }) 
   await page.locator("dialog").first().getByText("閉じる").click();
   await delay(1000);
   // click remove pin button on toolbar
-  await page.locator('button[title="Remove Pinned Outputs Leaving One"]').click();
+  await page.locator('[title="Remove Pinned Outputs Leaving One"]').click();
   // not has output-1 tab
   await expect(multi_outputs_tabs_container.locator('li[id="tab-output-1"]')).not.toBeVisible();
   // click close button on output-2 tab

@@ -1,27 +1,57 @@
-"""Jupyter Notebook 7 utility helpers.
+"""JupyterLab utility helpers.
 
-Helper functions for common Notebook 7 operations in e2e tests.
+Helper functions for common JupyterLab operations in e2e tests.
 """
 
 from playwright.async_api import Page, Locator, expect
 import re
 
 
+async def get_active_panel(
+    page: Page,
+    timeout: int = 30000
+) -> Locator:
+    """Get the active panel in JupyterLab.
+
+    Finds the active tab and returns the corresponding panel element.
+
+    Args:
+        page: Playwright page object
+        timeout: Timeout in milliseconds
+
+    Returns:
+        Playwright Locator for the active panel element
+    """
+    # Get the tab container
+    tab_container = page.locator('.lm-Widget.lm-TabBar.lm-DockPanel-tabBar')
+    await expect(tab_container).to_be_visible(timeout=timeout)
+
+    # Get the active tab
+    active_tab = tab_container.locator('.lm-TabBar-tab.lm-mod-current')
+    await expect(active_tab).to_be_visible(timeout=timeout)
+
+    # Get the tab's data-id attribute
+    tab_id = await active_tab.get_attribute('data-id')
+
+    # Find and return the panel with matching id
+    active_panel = page.locator(f'div.jp-Activity.lm-DockPanel-widget[id="{tab_id}"]')
+    return active_panel
+
+
 async def create_new_notebook(
     page: Page,
     timeout: int = 30000
 ):
-    """Create a new notebook from the tree page using File > New > Notebook menu.
+    """Create a new notebook from JupyterLab using File > New > Notebook menu.
 
-    Assumes page is already on the tree page (/tree).
-    Returns the new page object for the created notebook (opens in new tab).
+    Assumes page is already on the JupyterLab main page.
 
     Args:
-        page: Playwright page object (must be on /tree page)
+        page: Playwright page object (must be on JupyterLab page)
         timeout: Timeout in milliseconds
 
     Returns:
-        Page object for the newly created notebook
+        The same page object (notebook opens in same tab in JupyterLab)
     """
     # Click File menu
     file_menu = page.locator('.lm-MenuBar-itemLabel').filter(has_text=re.compile(r'^File$'))
@@ -38,19 +68,14 @@ async def create_new_notebook(
     await new_menu_item.hover()
 
     # Wait for submenu to appear and click "Notebook"
-    # In Notebook 7, this will open a new page
-    async with page.context.expect_page() as new_page_info:
-        submenu = page.locator('.lm-Menu[id="jp-mainmenu-file-new"]')
-        await expect(submenu).to_be_visible(timeout=timeout)
-        notebook_item = submenu.locator('.lm-Menu-item').filter(has_text='Notebook')
-        await expect(notebook_item).to_be_visible(timeout=timeout)
-        await notebook_item.click()
-
-    # Get the new page
-    new_page = await new_page_info.value
+    submenu = page.locator('.lm-Menu[id="jp-mainmenu-file-new"]')
+    await expect(submenu).to_be_visible(timeout=timeout)
+    notebook_item = submenu.locator('.lm-Menu-item').filter(has_text='Notebook')
+    await expect(notebook_item).to_be_visible(timeout=timeout)
+    await notebook_item.click()
 
     # Wait for kernel selection dialog to appear
-    kernel_dialog = new_page.locator('.jp-Dialog')
+    kernel_dialog = page.locator('.jp-Dialog')
     await expect(kernel_dialog).to_be_visible(timeout=timeout)
 
     # Click the "Select" button in the dialog
@@ -58,10 +83,11 @@ async def create_new_notebook(
     await expect(select_button).to_be_visible(timeout=timeout)
     await select_button.click()
 
-    # Wait for the notebook to be ready (first cell visible)
-    await expect(new_page.locator('.jp-Cell.jp-CodeCell')).to_be_visible(timeout=timeout)
+    # Wait for the active notebook panel to have cells
+    active_panel = await get_active_panel(page, timeout)
+    await expect(active_panel.locator('.jp-Cell.jp-CodeCell')).to_be_visible(timeout=timeout)
 
-    return new_page
+    return page
 
 
 async def set_cell_type(
@@ -71,8 +97,6 @@ async def set_cell_type(
     timeout: int = 30000
 ):
     """Change the type of a cell at the specified index.
-
-    Similar to Galata's page.notebook.setCellType functionality.
 
     Args:
         page: Playwright page object
@@ -97,9 +121,9 @@ async def set_cell_type(
     await cell_type_toolbar_item.click()
 
     # Change cell type
-    selectInput = page.locator('div.jp-Notebook-toolbarCellTypeDropdown select')
-    await expect(selectInput).to_be_visible(timeout=timeout)
-    await selectInput.select_option(cell_type)
+    select_input = page.locator('div.jp-Notebook-toolbarCellTypeDropdown select')
+    await expect(select_input).to_be_visible(timeout=timeout)
+    await select_input.select_option(cell_type)
 
 
 async def set_cell(
@@ -110,8 +134,6 @@ async def set_cell(
     timeout: int = 30000
 ):
     """Set the content of a cell at the specified index.
-
-    Similar to Galata's page.notebook.setCell functionality.
 
     Args:
         page: Playwright page object
@@ -153,8 +175,6 @@ async def run_cell(
 ):
     """Execute a cell at the specified index.
 
-    Similar to Galata's page.notebook.runCell functionality.
-
     Args:
         page: Playwright page object
         index: Cell index (0-based)
@@ -184,8 +204,6 @@ async def get_cell(
 ) -> Locator:
     """Get the cell element at the specified index.
 
-    Similar to Galata's page.notebook.getCell functionality.
-
     Args:
         page: Playwright page object
         index: Cell index (0-based)
@@ -194,7 +212,8 @@ async def get_cell(
     Returns:
         Playwright Locator for the cell element
     """
-    cells = page.locator('.jp-Cell')
+    panel = await get_active_panel(page, timeout)
+    cells = panel.locator('.jp-Cell')
     cell = cells.nth(index)
     await expect(cell).to_be_visible(timeout=timeout)
     return cell
@@ -207,8 +226,6 @@ async def select_cell(
 ):
     """Select a cell at the specified index.
 
-    Similar to Galata's page.notebook.selectCells functionality.
-
     Args:
         page: Playwright page object
         index: Cell index (0-based)
@@ -219,6 +236,7 @@ async def select_cell(
 
 
 __all__ = [
+    "get_active_panel",
     "create_new_notebook",
     "set_cell_type",
     "set_cell",

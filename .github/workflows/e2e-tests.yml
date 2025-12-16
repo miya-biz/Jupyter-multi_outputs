@@ -49,13 +49,13 @@ jobs:
       - name: Start Docker container
         run: |
           set -euxo pipefail
-          docker run -d --name jupyter_e2e_container -p 8888:8888 \
+          docker run -d --name lc-multi-outputs-test -p 8888:8888 \
             lc_multi_outputs:test start-notebook.sh \
             --ServerApp.token='test-token' --ServerApp.allow_origin='*'
           sleep 20
           # Health check
           curl --retry 10 --retry-delay 3 --retry-connrefused --fail http://localhost:8888/tree?token=test-token || {
-            docker logs jupyter_e2e_container
+            docker logs lc-multi-outputs-test
             exit 1
           }
 
@@ -74,7 +74,7 @@ jobs:
         run: |
           set -euxo pipefail
           mkdir -p ui-tests/e2e-notebook/artifacts
-          docker logs jupyter_e2e_container > ui-tests/e2e-notebook/artifacts/jupyter.log 2>&1 || true
+          docker logs lc-multi-outputs-test > ui-tests/e2e-notebook/artifacts/jupyter.log 2>&1 || true
 
       - name: Upload artifacts
         if: always()
@@ -88,5 +88,5 @@ jobs:
         if: always()
         run: |
           set -euxo pipefail
-          docker stop jupyter_e2e_container || true
-          docker rm jupyter_e2e_container || true
+          docker stop lc-multi-outputs-test || true
+          docker rm lc-multi-outputs-test || true

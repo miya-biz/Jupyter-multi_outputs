@@ -117,11 +117,12 @@ async def set_cell_type(
         return
 
     # Click cell type toolbar item
-    cell_type_toolbar_item = page.locator('.jp-Toolbar-item.jp-Notebook-toolbarCellType')
+    panel = await get_active_panel(page, timeout)
+    cell_type_toolbar_item = panel.locator('.jp-Toolbar-item.jp-Notebook-toolbarCellType')
     await cell_type_toolbar_item.click()
 
     # Change cell type
-    select_input = page.locator('div.jp-Notebook-toolbarCellTypeDropdown select')
+    select_input = panel.locator('div.jp-Notebook-toolbarCellTypeDropdown select')
     await expect(select_input).to_be_visible(timeout=timeout)
     await select_input.select_option(cell_type)
 
